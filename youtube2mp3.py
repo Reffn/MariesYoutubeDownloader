@@ -408,22 +408,40 @@ def ensure_ffmpeg(root):
 
     setup = tk.Toplevel(root)
     setup.title("Ersteinrichtung")
-    setup.geometry("420x160")
+    setup.geometry("420x200")
     setup.resizable(False, False)
     setup.configure(bg=CARD_BG)
     setup.grab_set()
 
-    tk.Label(setup, text="\u2699  Ersteinrichtung",
+    tk.Label(setup, text="\u2728  ersteinrichtung",
              font=("Segoe UI", 16, "bold"), bg=CARD_BG, fg=ACCENT).pack(pady=(20, 5))
-    status = tk.Label(setup, text="ffmpeg wird heruntergeladen...",
+    status = tk.Label(setup, text="ffmpeg wird geladen...",
                       font=("Segoe UI", 10), bg=CARD_BG, fg=TEXT_DIM)
     status.pack(pady=5)
+
+    progress_bar = ProgressBar(setup, width=360, height=20)
+    progress_bar.pack(pady=(8, 0))
+
+    pct_label = tk.Label(setup, text="0%",
+                         font=("Segoe UI", 10, "bold"), bg=CARD_BG, fg=ACCENT)
+    pct_label.pack(pady=(4, 0))
 
     success = [False]
 
     def do_download():
         def update(msg):
-            root.after(0, lambda: status.config(text=msg))
+            # Prozent aus msg extrahieren fuer den Balken
+            pct = 0
+            if "%" in msg:
+                try:
+                    pct = int(msg.split("...")[-1].strip().replace("%", ""))
+                except ValueError:
+                    pass
+            root.after(0, lambda: (
+                status.config(text=msg),
+                progress_bar.set(pct, 100),
+                pct_label.config(text=f"{pct}%"),
+            ))
 
         ok = download_ffmpeg(progress_callback=update)
         success[0] = ok
