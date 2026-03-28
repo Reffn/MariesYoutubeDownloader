@@ -452,7 +452,7 @@ class App:
 def ensure_ffmpeg(root):
     """Zeigt ein Setup-Fenster und laedt ffmpeg falls noetig."""
     if has_ffmpeg():
-        return True
+        return (True, "")
 
     setup = tk.Toplevel(root)
     setup.title("Ersteinrichtung")
