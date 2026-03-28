@@ -9,6 +9,78 @@ import threading
 import os
 import subprocess
 import sys
+import zipfile
+import urllib.request
+import shutil
+
+FFMPEG_ZIP_URL = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+
+
+def get_app_dir():
+    """Ordner in dem die .exe oder das .py liegt."""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def get_ytdlp_cmd():
+    """Findet yt-dlp: erst neben der .exe, dann im PATH."""
+    local = os.path.join(get_app_dir(), "yt-dlp.exe")
+    if os.path.isfile(local):
+        return local
+    return "yt-dlp"
+
+
+def has_ffmpeg():
+    """Prueft ob ffmpeg vorhanden ist (lokal oder im PATH)."""
+    local = os.path.join(get_app_dir(), "ffmpeg.exe")
+    if os.path.isfile(local):
+        return True
+    return shutil.which("ffmpeg") is not None
+
+
+def get_ffmpeg_dir():
+    """Findet ffmpeg-Ordner fuer --ffmpeg-location."""
+    local = os.path.join(get_app_dir(), "ffmpeg.exe")
+    if os.path.isfile(local):
+        return get_app_dir()
+    return None
+
+
+def download_ffmpeg(progress_callback=None):
+    """Laedt ffmpeg herunter und extrahiert ffmpeg.exe neben die App."""
+    app_dir = get_app_dir()
+    zip_path = os.path.join(app_dir, "_ffmpeg_temp.zip")
+
+    try:
+        # Download mit Fortschritt
+        def reporthook(block_num, block_size, total_size):
+            if progress_callback and total_size > 0:
+                pct = min(100, int(block_num * block_size * 100 / total_size))
+                progress_callback(f"Lade ffmpeg herunter... {pct}%")
+
+        if progress_callback:
+            progress_callback("Lade ffmpeg herunter... 0%")
+
+        urllib.request.urlretrieve(FFMPEG_ZIP_URL, zip_path, reporthook)
+
+        # ffmpeg.exe aus dem ZIP extrahieren
+        if progress_callback:
+            progress_callback("Entpacke ffmpeg...")
+
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            for name in zf.namelist():
+                if name.endswith("bin/ffmpeg.exe"):
+                    with zf.open(name) as src, open(os.path.join(app_dir, "ffmpeg.exe"), "wb") as dst:
+                        dst.write(src.read())
+                    break
+
+        return True
+    except Exception:
+        return False
+    finally:
+        if os.path.isfile(zip_path):
+            os.remove(zip_path)
 
 # -- Farben --
 BG_TOP = "#667eea"
@@ -277,7 +349,7 @@ class App:
             try:
                 output_template = os.path.join(self.download_dir, "%(title)s.%(ext)s")
                 cmd = [
-                    sys.executable, "-m", "yt_dlp",
+                    get_ytdlp_cmd(),
                     "--extract-audio",
                     "--audio-format", "mp3",
                     "--audio-quality", "0",
@@ -285,6 +357,10 @@ class App:
                     "--output", output_template,
                     url,
                 ]
+                ffmpeg_dir = get_ffmpeg_dir()
+                if ffmpeg_dir:
+                    cmd.insert(1, "--ffmpeg-location")
+                    cmd.insert(2, ffmpeg_dir)
                 result = subprocess.run(
                     cmd, capture_output=True, text=True,
                     encoding="utf-8", errors="replace"
@@ -325,8 +401,51 @@ class App:
             self.progress.set(0, 1)
 
 
+def ensure_ffmpeg(root):
+    """Zeigt ein Setup-Fenster und laedt ffmpeg falls noetig."""
+    if has_ffmpeg():
+        return True
+
+    setup = tk.Toplevel(root)
+    setup.title("Ersteinrichtung")
+    setup.geometry("420x160")
+    setup.resizable(False, False)
+    setup.configure(bg=CARD_BG)
+    setup.grab_set()
+
+    tk.Label(setup, text="\u2699  Ersteinrichtung",
+             font=("Segoe UI", 16, "bold"), bg=CARD_BG, fg=ACCENT).pack(pady=(20, 5))
+    status = tk.Label(setup, text="ffmpeg wird heruntergeladen...",
+                      font=("Segoe UI", 10), bg=CARD_BG, fg=TEXT_DIM)
+    status.pack(pady=5)
+
+    success = [False]
+
+    def do_download():
+        def update(msg):
+            root.after(0, lambda: status.config(text=msg))
+
+        ok = download_ffmpeg(progress_callback=update)
+        success[0] = ok
+        root.after(0, setup.destroy)
+
+    threading.Thread(target=do_download, daemon=True).start()
+    root.wait_window(setup)
+    return success[0]
+
+
 def main():
     root = tk.Tk()
+    root.withdraw()
+
+    if not ensure_ffmpeg(root):
+        messagebox.showerror("Fehler",
+                             "ffmpeg konnte nicht heruntergeladen werden.\n"
+                             "Bitte pruefe deine Internetverbindung und versuche es erneut.")
+        root.destroy()
+        return
+
+    root.deiconify()
     App(root)
     root.mainloop()
 
