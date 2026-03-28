@@ -4,9 +4,9 @@ YouTube-Links reinkopieren, MP3s direkt auf den Player laden!
 
 ## Download
 
-**[>>> Hier klicken zum Herunterladen <<<](https://github.com/Reffn/MariesYoutubeDownloader/releases/latest)**
+**[>>> MariesMP3Downloader.exe herunterladen <<<](MariesMP3Downloader.exe)**
 
-Nur eine Datei: `MariesMP3Downloader.exe`
+Einfach oben auf die Datei klicken und dann auf "Download".
 
 ## So geht's
 
