@@ -11,6 +11,9 @@ import subprocess
 import sys
 import zipfile
 import urllib.request
+import urllib.error
+import ssl
+import socket
 import shutil
 
 FFMPEG_ZIP_URL = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
@@ -94,14 +97,21 @@ def download_ffmpeg(progress_callback=None):
                     break
 
         return (True, "")
-    except urllib.error.URLError:
-        return (False, "kein internet? check mal dein wlan!")
+    except socket.timeout:
+        return (False, "download zu langsam / timeout.\ncheck mal dein internet!")
+    except ssl.SSLError as e:
+        return (False, f"SSL fehler (vielleicht schulnetzwerk/firewall?):\n{e}")
+    except urllib.error.URLError as e:
+        reason = str(getattr(e, 'reason', e))
+        return (False, f"kein internet oder seite nicht erreichbar:\n{reason}")
+    except ConnectionError:
+        return (False, "verbindung abgebrochen. versuch nochmal!")
     except zipfile.BadZipFile:
         return (False, "download war kaputt, versuch nochmal!")
     except PermissionError:
         return (False, "keine berechtigung zum speichern hier.\nversuch nen anderen ordner oder starte als admin.")
     except Exception as e:
-        return (False, str(e))
+        return (False, f"unerwarteter fehler:\n{type(e).__name__}: {e}")
     finally:
         if os.path.isfile(zip_path):
             os.remove(zip_path)
