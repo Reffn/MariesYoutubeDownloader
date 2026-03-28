@@ -64,6 +64,9 @@ def download_ffmpeg(progress_callback=None):
             progress_callback("verbinde... 0%")
 
         resp = urllib.request.urlopen(FFMPEG_URL, timeout=30)
+        # Read-Timeout setzen damit read() nicht endlos haengt
+        if hasattr(resp, 'fp') and hasattr(resp.fp, 'raw'):
+            resp.fp.raw._sock.settimeout(30)
         total = int(resp.headers.get("Content-Length", 0))
         downloaded = 0
         chunk_size = 256 * 1024  # 256 KB
