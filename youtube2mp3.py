@@ -401,19 +401,21 @@ class App:
                     cmd.insert(2, ffmpeg_dir)
                 result = subprocess.run(
                     cmd, capture_output=True, text=True,
-                    encoding="utf-8", errors="replace"
+                    encoding="utf-8", errors="replace",
+                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
                 )
                 if result.returncode == 0:
                     ok += 1
                 else:
-                    # Fehlermeldung aus yt-dlp output extrahieren
+                    output = (result.stderr or "") + (result.stdout or "")
                     err_msg = ""
-                    for line in (result.stderr or result.stdout or "").splitlines():
+                    for line in output.splitlines():
                         if "ERROR" in line:
                             err_msg = line.split("ERROR")[-1].strip(": ")
                             break
                     if not err_msg:
-                        err_msg = "unbekannter fehler"
+                        lines = [l.strip() for l in output.splitlines() if l.strip()]
+                        err_msg = lines[-1] if lines else "kein output von yt-dlp"
                     errors.append(f"#{i}: {err_msg}\n    {url}")
             except FileNotFoundError:
                 errors.append(f"#{i}: yt-dlp nicht gefunden!\n    {url}")
