@@ -9,14 +9,14 @@ import threading
 import os
 import subprocess
 import sys
-import zipfile
 import urllib.request
 import urllib.error
 import ssl
 import socket
 import shutil
+import py7zr
 
-FFMPEG_ZIP_URL = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+FFMPEG_URL = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.7z"
 
 
 def get_app_dir():
@@ -57,18 +57,18 @@ def get_ffmpeg_dir():
 def download_ffmpeg(progress_callback=None):
     """Laedt ffmpeg herunter und extrahiert ffmpeg.exe neben die App."""
     app_dir = get_app_dir()
-    zip_path = os.path.join(app_dir, "_ffmpeg_temp.zip")
+    archive_path = os.path.join(app_dir, "_ffmpeg_temp.7z")
 
     try:
         if progress_callback:
             progress_callback("verbinde... 0%")
 
-        resp = urllib.request.urlopen(FFMPEG_ZIP_URL, timeout=30)
+        resp = urllib.request.urlopen(FFMPEG_URL, timeout=30)
         total = int(resp.headers.get("Content-Length", 0))
         downloaded = 0
         chunk_size = 256 * 1024  # 256 KB
 
-        with open(zip_path, "wb") as f:
+        with open(archive_path, "wb") as f:
             while True:
                 chunk = resp.read(chunk_size)
                 if not chunk:
@@ -85,15 +85,22 @@ def download_ffmpeg(progress_callback=None):
                         mb = downloaded / (1024 * 1024)
                         progress_callback(f"Lade ffmpeg... {mb:.0f} MB  0%")
 
-        # ffmpeg.exe aus dem ZIP extrahieren
+        # ffmpeg.exe aus dem 7z extrahieren
         if progress_callback:
             progress_callback("Entpacke ffmpeg...")
 
-        with zipfile.ZipFile(zip_path, 'r') as zf:
-            for name in zf.namelist():
+        with py7zr.SevenZipFile(archive_path, 'r') as sz:
+            for name in sz.getnames():
                 if name.endswith("bin/ffmpeg.exe"):
-                    with zf.open(name) as src, open(os.path.join(app_dir, "ffmpeg.exe"), "wb") as dst:
-                        dst.write(src.read())
+                    sz.extract(targets=[name], path=app_dir)
+                    # Datei aus Unterordner nach app_dir verschieben
+                    extracted = os.path.join(app_dir, name)
+                    dest = os.path.join(app_dir, "ffmpeg.exe")
+                    shutil.move(extracted, dest)
+                    # Leere Unterordner aufraeumen
+                    top_dir = os.path.join(app_dir, name.split("/")[0])
+                    if os.path.isdir(top_dir):
+                        shutil.rmtree(top_dir, ignore_errors=True)
                     break
 
         return (True, "")
@@ -106,15 +113,13 @@ def download_ffmpeg(progress_callback=None):
         return (False, f"kein internet oder seite nicht erreichbar:\n{reason}")
     except ConnectionError:
         return (False, "verbindung abgebrochen. versuch nochmal!")
-    except zipfile.BadZipFile:
-        return (False, "download war kaputt, versuch nochmal!")
     except PermissionError:
         return (False, "keine berechtigung zum speichern hier.\nversuch nen anderen ordner oder starte als admin.")
     except Exception as e:
         return (False, f"unerwarteter fehler:\n{type(e).__name__}: {e}")
     finally:
-        if os.path.isfile(zip_path):
-            os.remove(zip_path)
+        if os.path.isfile(archive_path):
+            os.remove(archive_path)
 
 # -- Farben --
 BG_TOP = "#0f0c29"
