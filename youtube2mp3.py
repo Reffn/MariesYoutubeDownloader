@@ -79,9 +79,15 @@ def download_ffmpeg(progress_callback=None):
                         dst.write(src.read())
                     break
 
-        return True
-    except Exception:
-        return False
+        return (True, "")
+    except urllib.error.URLError:
+        return (False, "kein internet? check mal dein wlan!")
+    except zipfile.BadZipFile:
+        return (False, "download war kaputt, versuch nochmal!")
+    except PermissionError:
+        return (False, "keine berechtigung zum speichern hier.\nversuch nen anderen ordner oder starte als admin.")
+    except Exception as e:
+        return (False, str(e))
     finally:
         if os.path.isfile(zip_path):
             os.remove(zip_path)
@@ -368,9 +374,19 @@ class App:
                 if result.returncode == 0:
                     ok += 1
                 else:
-                    errors.append(f"#{i}: {url}")
-            except Exception:
-                errors.append(f"#{i}: {url}")
+                    # Fehlermeldung aus yt-dlp output extrahieren
+                    err_msg = ""
+                    for line in (result.stderr or result.stdout or "").splitlines():
+                        if "ERROR" in line:
+                            err_msg = line.split("ERROR")[-1].strip(": ")
+                            break
+                    if not err_msg:
+                        err_msg = "unbekannter fehler"
+                    errors.append(f"#{i}: {err_msg}\n    {url}")
+            except FileNotFoundError:
+                errors.append(f"#{i}: yt-dlp nicht gefunden!\n    {url}")
+            except Exception as e:
+                errors.append(f"#{i}: {e}\n    {url}")
 
             self.root.after(0, self.progress.set, i, total)
 
@@ -426,7 +442,7 @@ def ensure_ffmpeg(root):
                          font=("Segoe UI", 10, "bold"), bg=CARD_BG, fg=ACCENT)
     pct_label.pack(pady=(4, 0))
 
-    success = [False]
+    result = [False, ""]
 
     def do_download():
         def update(msg):
@@ -443,23 +459,25 @@ def ensure_ffmpeg(root):
                 pct_label.config(text=f"{pct}%"),
             ))
 
-        ok = download_ffmpeg(progress_callback=update)
-        success[0] = ok
+        ok, err = download_ffmpeg(progress_callback=update)
+        result[0] = ok
+        result[1] = err
         root.after(0, setup.destroy)
 
     threading.Thread(target=do_download, daemon=True).start()
     root.wait_window(setup)
-    return success[0]
+    return result[0], result[1]
 
 
 def main():
     root = tk.Tk()
     root.withdraw()
 
-    if not ensure_ffmpeg(root):
-        messagebox.showerror("Fehler",
-                             "ffmpeg konnte nicht heruntergeladen werden.\n"
-                             "Bitte pruefe deine Internetverbindung und versuche es erneut.")
+    ok, err = ensure_ffmpeg(root)
+    if not ok:
+        messagebox.showerror("oof \U0001F625",
+                             f"ffmpeg setup hat nicht geklappt:\n\n{err}\n\n"
+                             "starte die app nochmal wenn du internet hast!")
         root.destroy()
         return
 
