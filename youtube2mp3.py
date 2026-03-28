@@ -27,11 +27,7 @@ def get_app_dir():
 
 
 def get_ytdlp_cmd():
-    """Findet yt-dlp: erst in der .exe eingebettet, dann daneben, dann PATH."""
-    if getattr(sys, '_MEIPASS', None):
-        bundled = os.path.join(sys._MEIPASS, "yt-dlp.exe")
-        if os.path.isfile(bundled):
-            return bundled
+    """Findet yt-dlp: erst neben der .exe, dann im PATH."""
     local = os.path.join(get_app_dir(), "yt-dlp.exe")
     if os.path.isfile(local):
         return local

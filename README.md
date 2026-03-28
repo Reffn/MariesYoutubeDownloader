@@ -4,14 +4,15 @@ YouTube-Links reinkopieren, MP3s direkt auf den Player laden!
 
 ## Download
 
-Beide Dateien runterladen und in den **gleichen Ordner** legen:
+Alle 3 Dateien runterladen und in den **gleichen Ordner** legen:
 
 1. **[MariesMP3Downloader.exe](MariesMP3Downloader.exe)** - Die App
-2. **[ffmpeg.exe](ffmpeg.exe)** - Wird fuer MP3-Konvertierung gebraucht
+2. **[ffmpeg.exe](ffmpeg.exe)** - MP3-Konvertierung
+3. **[yt-dlp.exe](yt-dlp.exe)** - YouTube-Download
 
 ## So geht's
 
-1. Beide Dateien in den gleichen Ordner legen
+1. Alle 3 Dateien in den gleichen Ordner legen
 2. `MariesMP3Downloader.exe` doppelklicken
 3. Ordner auf dem MP3-Player waehlen
 4. YouTube-Links reinkopieren
