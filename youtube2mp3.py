@@ -87,17 +87,18 @@ def download_ffmpeg(progress_callback=None):
             os.remove(zip_path)
 
 # -- Farben --
-BG_TOP = "#667eea"
-BG_BOT = "#f093fb"
+BG_TOP = "#0f0c29"
+BG_BOT = "#302b63"
 CARD_BG = "#1a1a2e"
-CARD_BG_LIGHT = "#16213e"
-ACCENT = "#e94eff"
-ACCENT2 = "#667eea"
+CARD_BG_LIGHT = "#232342"
+CARD_BORDER = "#3a3a6a"
+ACCENT = "#ff2d95"
+ACCENT2 = "#b537f2"
 TEXT = "#ffffff"
-TEXT_DIM = "#8888aa"
-SUCCESS = "#00e676"
-BTN_BG = "#e94eff"
-BTN_HOVER = "#ff6fff"
+TEXT_DIM = "#9999bb"
+SUCCESS = "#3cff8f"
+BTN_BG = "#ff2d95"
+BTN_HOVER = "#ff5caf"
 BTN_DISABLED = "#555577"
 
 
@@ -151,7 +152,7 @@ class ProgressBar(tk.Canvas):
     def _draw(self):
         self.delete("all")
         # Hintergrund-Track
-        self._round_rect(2, 2, self._bar_w - 2, self._bar_h - 2, 10, fill="#2a2a4a", outline="")
+        self._round_rect(2, 2, self._bar_w - 2, self._bar_h - 2, 10, fill="#2a2a4e", outline="")
         # Gefuellter Bereich
         frac = self._value / self._max
         if frac > 0:
@@ -177,8 +178,8 @@ class ProgressBar(tk.Canvas):
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Maries MP3 Downloader")
-        self.root.geometry("620x620")
+        self.root.title("maries vibe loader")
+        self.root.geometry("640x680")
         self.root.resizable(False, False)
         self.is_downloading = False
         self.download_dir = ""
@@ -187,33 +188,33 @@ class App:
         self.bg = GradientFrame(root, BG_TOP, BG_BOT)
         self.bg.pack(fill="both", expand=True)
 
-        # Hauptkarte (zentriert, abgerundet simuliert)
-        card_outer = tk.Frame(self.bg, bg=CARD_BG, padx=3, pady=3)
-        card_outer.place(relx=0.5, rely=0.5, anchor="center", width=560, height=570)
+        # Glassmorphism-Karte
+        card_border = tk.Frame(self.bg, bg=CARD_BORDER, padx=2, pady=2)
+        card_border.place(relx=0.5, rely=0.5, anchor="center", width=580, height=630)
 
-        card = tk.Frame(card_outer, bg=CARD_BG, padx=25, pady=15)
+        card = tk.Frame(card_border, bg=CARD_BG, padx=28, pady=18)
         card.pack(fill="both", expand=True)
 
         # --- Titel ---
-        tk.Label(card, text="\u266b Maries MP3 Downloader \u266b",
-                 font=("Segoe UI", 22, "bold"), bg=CARD_BG, fg=ACCENT).pack(pady=(10, 0))
-        tk.Label(card, text="YouTube \u2192 MP3 \u2192 Player. Easy!",
-                 font=("Segoe UI", 11), bg=CARD_BG, fg=TEXT_DIM).pack(pady=(2, 18))
+        tk.Label(card, text="\u2728\U0001F3B5 maries vibe loader \U0001F3B5\u2728",
+                 font=("Segoe UI", 24, "bold"), bg=CARD_BG, fg=ACCENT).pack(pady=(8, 0))
+        tk.Label(card, text="yt  \u2192  mp3  \u2192  player. no cap.",
+                 font=("Segoe UI", 11), bg=CARD_BG, fg=TEXT_DIM).pack(pady=(2, 20))
 
         # --- Schritt 1: Ordner waehlen ---
         step1 = tk.Frame(card, bg=CARD_BG)
         step1.pack(fill="x")
-        tk.Label(step1, text="\u2460  Wo sollen die Songs hin?",
+        tk.Label(step1, text="\U0001F4C1  wo sollen die bangers hin?",
                  font=("Segoe UI", 12, "bold"), bg=CARD_BG, fg=TEXT).pack(anchor="w")
 
-        self.dir_btn = tk.Button(step1, text="\U0001F4C2  Ordner waehlen...",
+        self.dir_btn = tk.Button(step1, text="\u2728  ordner waehlen...",
                                  font=("Segoe UI", 11), bg=ACCENT2, fg="white",
-                                 activebackground=BTN_HOVER, activeforeground="white",
-                                 relief="flat", cursor="hand2", padx=16, pady=7,
+                                 activebackground="#c96bff", activeforeground="white",
+                                 relief="flat", cursor="hand2", padx=16, pady=8,
                                  command=self._choose_dir)
         self.dir_btn.pack(fill="x", pady=(6, 0))
 
-        self.dir_label = tk.Label(step1, text="Noch kein Ordner gewaehlt",
+        self.dir_label = tk.Label(step1, text="noch nix gewaehlt",
                                   font=("Segoe UI", 9), bg=CARD_BG, fg=TEXT_DIM, anchor="w")
         self.dir_label.pack(fill="x", pady=(4, 0))
 
@@ -223,53 +224,48 @@ class App:
 
         step2_header = tk.Frame(step2, bg=CARD_BG)
         step2_header.pack(fill="x")
-        tk.Label(step2_header, text="\u2461  Deine YouTube-Links hier rein!",
+        tk.Label(step2_header, text="\U0001F3A7  drop deine links here",
                  font=("Segoe UI", 12, "bold"), bg=CARD_BG, fg=TEXT).pack(side="left")
         self.counter_label = tk.Label(step2_header, text="",
-                                      font=("Segoe UI", 10), bg=CARD_BG, fg=ACCENT)
+                                      font=("Segoe UI", 10, "bold"), bg=CARD_BG, fg=ACCENT)
         self.counter_label.pack(side="right")
 
-        text_frame = tk.Frame(step2, bg=CARD_BG_LIGHT, padx=2, pady=2)
-        text_frame.pack(fill="x", pady=(6, 0))
+        text_border = tk.Frame(step2, bg=CARD_BORDER, padx=1, pady=1)
+        text_border.pack(fill="x", pady=(6, 0))
 
-        self.links_text = tk.Text(text_frame, height=9, font=("Consolas", 10),
-                                  bg=CARD_BG_LIGHT, fg="#ddddff", insertbackground=ACCENT,
-                                  relief="flat", bd=8, wrap="word",
+        self.links_text = tk.Text(text_border, height=9, font=("Consolas", 10),
+                                  bg=CARD_BG_LIGHT, fg="#ddddff", insertbackground=ACCENT2,
+                                  relief="flat", bd=10, wrap="word",
                                   selectbackground=ACCENT, selectforeground="white")
         self.links_text.pack(fill="x")
 
         # Placeholder
         self._placeholder_on = True
-        self.links_text.insert("1.0", "Einfach Links hier reinkopieren...\n(ein Link pro Zeile)")
+        self.links_text.insert("1.0", "links hier droppen...\n(one per line pls)")
         self.links_text.config(fg=TEXT_DIM)
         self.links_text.bind("<FocusIn>", self._clear_placeholder)
         self.links_text.bind("<FocusOut>", self._show_placeholder)
         self.links_text.bind("<KeyRelease>", self._update_counter)
 
-        # --- Schritt 3: Download ---
-        step3 = tk.Frame(card, bg=CARD_BG)
-        step3.pack(fill="x", pady=(18, 0))
-        tk.Label(step3, text="\u2462  Und los!",
-                 font=("Segoe UI", 12, "bold"), bg=CARD_BG, fg=TEXT).pack(anchor="w")
-
+        # --- Download ---
         self.download_btn = tk.Button(
-            step3, text="\u25B6  Alle Songs herunterladen",
-            font=("Segoe UI", 14, "bold"),
+            card, text="\U0001F525  LET'S GOOO",
+            font=("Segoe UI", 16, "bold"),
             bg=BTN_BG, fg="white", activebackground=BTN_HOVER, activeforeground="white",
-            relief="flat", cursor="hand2", padx=20, pady=12,
+            relief="flat", cursor="hand2", padx=20, pady=14,
             command=self._start_download
         )
-        self.download_btn.pack(fill="x", pady=(8, 0))
+        self.download_btn.pack(fill="x", pady=(20, 0))
 
         # Hover-Effekte
         self._add_hover(self.download_btn, BTN_BG, BTN_HOVER)
-        self._add_hover(self.dir_btn, ACCENT2, "#7b93ff")
+        self._add_hover(self.dir_btn, ACCENT2, "#c96bff")
 
         # --- Fortschritt ---
         progress_frame = tk.Frame(card, bg=CARD_BG)
-        progress_frame.pack(fill="x", pady=(14, 0))
+        progress_frame.pack(fill="x", pady=(16, 0))
 
-        self.progress = ProgressBar(progress_frame, width=500, height=20)
+        self.progress = ProgressBar(progress_frame, width=510, height=22)
         self.progress.pack()
 
         self.status_var = tk.StringVar(value="")
@@ -292,7 +288,7 @@ class App:
         content = self.links_text.get("1.0", "end").strip()
         if not content:
             self._placeholder_on = True
-            self.links_text.insert("1.0", "Einfach Links hier reinkopieren...\n(ein Link pro Zeile)")
+            self.links_text.insert("1.0", "links hier droppen...\n(one per line pls)")
             self.links_text.config(fg=TEXT_DIM)
 
     def _update_counter(self, event=None):
@@ -304,17 +300,17 @@ class App:
         if n == 0:
             self.counter_label.config(text="")
         elif n == 1:
-            self.counter_label.config(text="1 Song")
+            self.counter_label.config(text="\U0001F525 1 banger ready")
         else:
-            self.counter_label.config(text=f"{n} Songs")
+            self.counter_label.config(text=f"\U0001F525 {n} bangers ready")
 
     def _choose_dir(self):
         path = filedialog.askdirectory(title="Ordner auf dem MP3-Player waehlen")
         if path:
             self.download_dir = path
             # Pfad kuerzen wenn zu lang
-            display = path if len(path) < 55 else "..." + path[-52:]
-            self.dir_label.config(text=f"\u2714 {display}", fg=SUCCESS)
+            display = path if len(path) < 50 else "..." + path[-47:]
+            self.dir_label.config(text=f"\u2728 {display}", fg=SUCCESS)
 
     def _get_links(self):
         if self._placeholder_on:
@@ -327,15 +323,15 @@ class App:
         if self.is_downloading:
             return
         if not self.download_dir:
-            messagebox.showwarning("Kein Ordner", "Bitte zuerst den Ordner waehlen! (Schritt 1)")
+            messagebox.showwarning("hey!", "erst nen ordner waehlen! \U0001F4C1")
             return
         links = self._get_links()
         if not links:
-            messagebox.showwarning("Keine Links", "Bitte mindestens einen YouTube-Link einfuegen! (Schritt 2)")
+            messagebox.showwarning("hey!", "du hast noch keine links reingepackt! \U0001F3A7")
             return
 
         self.is_downloading = True
-        self.download_btn.config(state="disabled", bg=BTN_DISABLED, text="\u23F3  Lade herunter...")
+        self.download_btn.config(state="disabled", bg=BTN_DISABLED, text="\u23F3  loading ur bangers...")
         self.progress.set(0, len(links))
 
         thread = threading.Thread(target=self._download_all, args=(links,), daemon=True)
@@ -348,7 +344,7 @@ class App:
 
         for i, url in enumerate(links, 1):
             self.root.after(0, self._update_status,
-                            f"\u266b  Lade Song {i} von {total}...")
+                            f"\U0001F3B5  vibing... {i}/{total}")
 
             try:
                 output_template = os.path.join(self.download_dir, "%(title)s.%(ext)s")
@@ -386,18 +382,18 @@ class App:
     def _on_done(self, ok, total, errors):
         self.is_downloading = False
         self.download_btn.config(state="normal", bg=BTN_BG,
-                                 text="\u25B6  Alle Songs herunterladen")
+                                 text="\U0001F525  LET'S GOOO")
         self._add_hover(self.download_btn, BTN_BG, BTN_HOVER)
 
         if errors:
-            self.status_var.set(f"\u26A0  {ok}/{total} erfolgreich")
+            self.status_var.set(f"\u26A0  {ok}/{total} hat geklappt")
             err_list = "\n".join(errors)
-            messagebox.showwarning("Teilweise Fehler",
-                                   f"{ok}/{total} erfolgreich.\n\nFehlgeschlagen:\n{err_list}")
+            messagebox.showwarning("oof",
+                                   f"{ok}/{total} geschafft.\n\nhat nicht geklappt:\n{err_list}")
         else:
-            self.status_var.set(f"\u2714  Alle {total} Songs geladen!")
-            messagebox.showinfo("Fertig!",
-                                f"Alle {total} Songs als MP3 gespeichert!\n\n{self.download_dir}")
+            self.status_var.set(f"\u2728 slay! alle {total} songs geladen!")
+            messagebox.showinfo("\U0001F389 yaaay!",
+                                f"alle {total} bangers sind auf deinem player!\n\n{self.download_dir}")
             self.links_text.delete("1.0", "end")
             self._placeholder_on = False
             self._show_placeholder()
