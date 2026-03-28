@@ -57,16 +57,30 @@ def download_ffmpeg(progress_callback=None):
     zip_path = os.path.join(app_dir, "_ffmpeg_temp.zip")
 
     try:
-        # Download mit Fortschritt
-        def reporthook(block_num, block_size, total_size):
-            if progress_callback and total_size > 0:
-                pct = min(100, int(block_num * block_size * 100 / total_size))
-                progress_callback(f"Lade ffmpeg herunter... {pct}%")
-
         if progress_callback:
-            progress_callback("Lade ffmpeg herunter... 0%")
+            progress_callback("verbinde... 0%")
 
-        urllib.request.urlretrieve(FFMPEG_ZIP_URL, zip_path, reporthook)
+        resp = urllib.request.urlopen(FFMPEG_ZIP_URL, timeout=30)
+        total = int(resp.headers.get("Content-Length", 0))
+        downloaded = 0
+        chunk_size = 256 * 1024  # 256 KB
+
+        with open(zip_path, "wb") as f:
+            while True:
+                chunk = resp.read(chunk_size)
+                if not chunk:
+                    break
+                f.write(chunk)
+                downloaded += len(chunk)
+                if progress_callback:
+                    if total > 0:
+                        pct = min(100, int(downloaded * 100 / total))
+                        mb = downloaded / (1024 * 1024)
+                        total_mb = total / (1024 * 1024)
+                        progress_callback(f"Lade ffmpeg... {mb:.0f}/{total_mb:.0f} MB  {pct}%")
+                    else:
+                        mb = downloaded / (1024 * 1024)
+                        progress_callback(f"Lade ffmpeg... {mb:.0f} MB  0%")
 
         # ffmpeg.exe aus dem ZIP extrahieren
         if progress_callback:
